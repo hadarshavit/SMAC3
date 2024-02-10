@@ -293,3 +293,12 @@ class RandomForest(AbstractRandomForest):
             var = var.reshape((-1, 1))
 
         return mean_, var
+
+    def copy_model(self) -> regression.binary_rss_forest:
+        return self._rf
+
+    def set_model(self, model: regression.binary_rss_forest) -> None:
+        self._rf = model
+
+    def reset_model(self) -> None:
+        pass

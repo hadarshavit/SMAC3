@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, Iterator
 
 import copy
+from copy import deepcopy
 
 import numpy as np
 from ConfigSpace import Configuration
@@ -81,6 +82,8 @@ class ConfigSelector:
 
         # Processed configurations should be stored here; this is important to not return the same configuration twice
         self._processed_configs: list[Configuration] = []
+
+        self.models = []
 
     def _set_components(
         self,
@@ -192,8 +195,10 @@ class ConfigSelector:
 
             # Check if X/Y differs from the last run, otherwise use cached results
             if self._previous_entries != Y.shape[0]:
-                self._model.train(X, Y)
+                print(f"Training model on {X.shape}, {Y.shape}")
 
+                self._model.train(X, Y)
+                # self.models.append((self._model._rf, X, Y))
                 x_best_array: np.ndarray | None = None
                 if incumbent_value is not None:
                     best_observation = incumbent_value
