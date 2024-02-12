@@ -19,6 +19,7 @@ from smac.main.smbo import SMBO
 from smac.model import AbstractModel
 from smac.model.gaussian_process import GaussianProcess
 from smac.model.random_forest import RandomForest
+from smac.model.progressive_ensemble import ProgressiveEnsemble
 from smac.runhistory import TrialInfo, TrialValue
 from smac.runhistory.encoder.encoder import RunHistoryEncoder
 from smac.utils.logging import get_logger
@@ -82,9 +83,9 @@ class UpperBoundRegretCallback(Callback):
 
     def on_tell_end(self, smbo: SMBO, info: TrialInfo, value: TrialValue) -> bool | None:
         # Check encoding
-        if type(smbo.intensifier.config_selector._runhistory_encoder) is not RunHistoryEncoder:
-            msg = "Currently no response value transformations are supported, only " "RunHistoryEncoder possible."
-            raise NotImplementedError(msg)
+        # if type(smbo.intensifier.config_selector._runhistory_encoder) is not RunHistoryEncoder:
+        #     msg = "Currently no response value transformations are supported, only " "RunHistoryEncoder possible."
+        #     raise NotImplementedError(msg)
 
         # Line 16: r_t = min UCB(config) (from all evaluated configs) - min LCB(config) (from config space)
         # Get all evaluated configs
@@ -311,7 +312,8 @@ def model_fitted(model: AbstractModel | None) -> bool:
     fitted = False
     if model is not None:
         fitted = (type(model) == GaussianProcess and model._is_trained) or (
-            type(model) == RandomForest and model._rf is not None
+            type(model) == RandomForest and model._rf is not None or (
+                type(model) == ProgressiveEnsemble and model._fitted)
         )
     return fitted
 

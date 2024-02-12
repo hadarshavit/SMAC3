@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Iterator
 
+import os
 import copy
 from copy import deepcopy
 
@@ -58,7 +59,7 @@ class ConfigSelector:
         # Those are the configs sampled from the passed initial design
         # Selecting configurations from initial design
         self._initial_design_configs: list[Configuration] = []
-
+        
         # Set classes globally
         self._scenario = scenario
         self._runhistory: RunHistory | None = None
@@ -84,6 +85,8 @@ class ConfigSelector:
         self._processed_configs: list[Configuration] = []
 
         self.models = []
+
+        # os.makedirs(f'{self._scenario.output_directory}/trained_models/')
 
     def _set_components(
         self,
@@ -198,7 +201,10 @@ class ConfigSelector:
                 print(f"Training model on {X.shape}, {Y.shape}")
 
                 self._model.train(X, Y)
-                # self.models.append((self._model._rf, X, Y))
+
+                self._model.save(f'{self._scenario.output_directory}/trained_models/{Y.shape[0]}')
+                # self.models.append((self._model, X, Y))
+                self.models.append(Y.shape[0])
                 x_best_array: np.ndarray | None = None
                 if incumbent_value is not None:
                     best_observation = incumbent_value

@@ -3,6 +3,9 @@ from __future__ import annotations
 from typing import Any
 
 from copy import deepcopy
+import pickle
+import lzma
+import os
 
 import numpy as np
 from ConfigSpace import ConfigurationSpace
@@ -10,6 +13,7 @@ from pyrfr import regression
 from pyrfr.regression import binary_rss_forest as BinaryForest
 from pyrfr.regression import default_data_container as DataContainer
 from skopt.learning import GradientBoostingQuantileRegressor
+from sklearn.ensemble import GradientBoostingRegressor
 
 from smac.constants import N_TREES, VERY_SMALL_NUMBER
 from smac.model.random_forest import AbstractRandomForest
@@ -80,7 +84,6 @@ class GradientBoosting(AbstractRandomForest):
         self.seed = seed
         self._gb = GradientBoostingQuantileRegressor(random_state=seed)
         self._log_y = log_y
-        self._rng = regression.default_random_engine(seed)
 
         self._n_trees = n_trees
         self._n_points_per_tree = n_points_per_tree
@@ -162,6 +165,7 @@ class GradientBoosting(AbstractRandomForest):
         #     vars_ = preds_as_array.var(axis=1)
 
         means_, vars_ = self._gb.predict(X, return_std=True)
+        vars_[vars_ < 0] = 0
         vars_ = np.sqrt(vars_)
 
         return means_.reshape((-1, 1)), vars_.reshape((-1, 1))
@@ -234,4 +238,24 @@ class GradientBoosting(AbstractRandomForest):
         self._gb = model
 
     def reset_model(self):
-        self._gb = GradientBoostingQuantileRegressor(random_state=self.seed)
+        self._gb = GradientBoostingQuantileRegressor(random_state=self.seed, base_estimator=GradientBoostingRegressor(loss='quantile', n_estimators=10))
+
+    def save_model(self, path) -> None:
+        with lzma.open(path, 'wb') as f:
+            pickle.dump(self, f)
+
+    def load_model(self, path):
+         with lzma.open(path, 'rb') as f:
+            self._gb = pickle.load(f)
+            self._gb.save()
+    
+    def save(self, path):
+        os.makedirs(path)
+        with lzma.open(os.path.join(path, 'main_class.pkl'), 'wb') as f:
+            pickle.dump(self, f)
+
+    @staticmethod
+    def load(path):
+        with lzma.open(os.path.join(path, 'main_class.pkl'), 'rb') as f:
+            cls = pickle.load(f)
+            return cls._gb, cls

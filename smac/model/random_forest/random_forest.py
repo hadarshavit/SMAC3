@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 from typing import Any
+import lzma
+import pickle
+import os
 
 import numpy as np
 from ConfigSpace import ConfigurationSpace
@@ -98,6 +101,8 @@ class RandomForest(AbstractRandomForest):
         self._eps_purity = eps_purity
         self._max_nodes = max_nodes
         self._bootstrapping = bootstrapping
+        self._max_features = max_features
+        self._seed = seed
 
         # This list well be read out by save_iteration() in the solver
         # self._hypers = [
@@ -301,4 +306,52 @@ class RandomForest(AbstractRandomForest):
         self._rf = model
 
     def reset_model(self) -> None:
-        pass
+        self._rf = None
+
+    def save_model(self, path) -> None:
+        self._rf.save_to_binary_file(path)
+
+    def load_model(self, path):
+        self._rf = regression.binary_rss_forest()
+        self._rf = self._rf.load_from_binary_file(path)
+    
+    def save(self, path):
+        rf = self._rf
+        self._rf = None
+        opts = self._rf_opts
+        self._rf_opts = None
+        rng = self._rng
+        self._rng = None
+        os.makedirs(path)
+        with lzma.open(os.path.join(path, 'main_class.pkl'), 'wb') as f:
+            pickle.dump(self, f)
+        
+        rf.save_to_binary_file(os.path.join(path, 'model.rf'))
+
+        self._rf = rf
+        self._rng = rng
+        self._rf_opts = opts
+
+    @staticmethod
+    def load(path):
+        with lzma.open(os.path.join(path, 'main_class.pkl'), 'rb') as f:
+            cls = pickle.load(f)
+
+        rf = regression.binary_rss_forest()
+        rf.load_from_binary_file(os.path.join(path, 'model.rf'))
+
+        cls._rf = rf
+
+        cls._rf_opts = regression.forest_opts()
+        cls._rf_opts.num_trees = cls._n_trees
+        cls._rf_opts.do_bootstrapping = cls._bootstrapping
+        cls._rf_opts.tree_opts.max_features = cls._max_features
+        cls._rf_opts.tree_opts.min_samples_to_split = cls._min_samples_split
+        cls._rf_opts.tree_opts.min_samples_in_leaf = cls._min_samples_leaf
+        cls._rf_opts.tree_opts.max_depth = cls._max_depth
+        cls._rf_opts.tree_opts.epsilon_purity = cls._eps_purity
+        cls._rf_opts.tree_opts.max_num_nodes = cls._max_nodes
+        cls._rf_opts.compute_law_of_total_variance = False
+        cls._rng = regression.default_random_engine(cls._seed)
+
+        return rf, cls

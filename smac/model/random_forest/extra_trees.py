@@ -3,6 +3,9 @@ from __future__ import annotations
 from typing import Any
 
 from copy import deepcopy
+import pickle
+import lzma
+import os
 
 import numpy as np
 from ConfigSpace import ConfigurationSpace
@@ -81,7 +84,6 @@ class ExtraTrees(AbstractRandomForest):
         self._et = None
         self.reset_model()
         self._log_y = log_y
-        self._rng = regression.default_random_engine(seed)
 
         self._n_trees = n_trees
         self._n_points_per_tree = n_points_per_tree
@@ -235,4 +237,33 @@ class ExtraTrees(AbstractRandomForest):
         self._et = model
 
     def reset_model(self):
-        self._et = ExtraTreesRegressor(criterion="squared_error", max_features=1, random_state=self.seed)
+        self._et = ExtraTreesRegressor(criterion="squared_error", max_features=1, random_state=self.seed, n_estimators=10)
+    
+    def save_model(self, path) -> None:
+        with lzma.open(path, 'wb') as f:
+            pickle.dump(f, self._gb)
+
+    def load_model(self, path):
+         with lzma.open(path, 'rb') as f:
+            self._gb = pickle.load(f)
+        
+    def save_class(self, path):
+        et = self._et
+        self._et = None
+
+        with lzma.open(path, 'wb') as f:
+            pickle.dump(f, self)
+
+        self._et = et
+
+    def save(self, path):
+        os.makedirs(path)
+        with lzma.open(os.path.join(path, 'main_class.pkl'), 'wb') as f:
+            pickle.dump(self, f)
+
+    @staticmethod
+    def load(path):
+        with lzma.open(os.path.join(path, 'main_class.pkl'), 'rb') as f:
+            cls = pickle.load(f)
+            return cls._et, cls
+
