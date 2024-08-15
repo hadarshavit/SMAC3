@@ -205,6 +205,7 @@ class RandomForest(AbstractRandomForest):
             all_preds = []
             third_dimension = 0
 
+<<<<<<< HEAD
             # Gather data in a list of 2d arrays and get statistics about the required size of the 3d array
             for row_X in X:
                 preds_per_tree = self._rf.all_leaf_values(row_X)
@@ -239,6 +240,20 @@ class RandomForest(AbstractRandomForest):
                 # Compute the mean and the variance across the different trees
                 means = preds_as_array.mean(axis=1)
                 vars_ = preds_as_array.var(axis=1)
+=======
+            means, vars_ = [], []
+            for row_X in X:
+                preds_per_tree = self._rf.all_leaf_values(row_X)
+                means_per_tree = []
+                for preds in preds_per_tree:
+                    # within one tree, we want to use the
+                    # arithmetic mean and not the geometric mean
+                    means_per_tree.append(np.log(np.mean(np.exp(preds))))
+                mean = np.mean(means_per_tree)
+                var = np.var(means_per_tree) # variance over trees as uncertainty estimate
+                means.append(mean)
+                vars_.append(var)
+>>>>>>> 7e643f11 (Update random_forest.py)
         else:
             means, vars_ = [], []
             for row_X in X:
