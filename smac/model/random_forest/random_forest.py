@@ -206,17 +206,17 @@ class RandomForest(AbstractRandomForest):
             third_dimension = 0
 
             means, vars_ = [], []
-                for row_X in X:
-                    preds_per_tree = self._rf.all_leaf_values(row_X)
-                    means_per_tree = []
-                    for preds in preds_per_tree:
-                        # within one tree, we want to use the
-                        # arithmetic mean and not the geometric mean
-                        means_per_tree.append(np.log(np.mean(np.exp(preds))))
-                    mean = np.mean(means_per_tree)
-                    var = np.var(means_per_tree) # variance over trees as uncertainty estimate
-                    means.append(mean)
-                    vars_.append(var)
+            for row_X in X:
+                preds_per_tree = self._rf.all_leaf_values(row_X)
+                means_per_tree = []
+                for preds in preds_per_tree:
+                    # within one tree, we want to use the
+                    # arithmetic mean and not the geometric mean
+                    means_per_tree.append(np.log(np.mean(np.exp(preds))))
+                mean = np.mean(means_per_tree)
+                var = np.var(means_per_tree) # variance over trees as uncertainty estimate
+                means.append(mean)
+                vars_.append(var)
         else:
             means, vars_ = [], []
             for row_X in X:
