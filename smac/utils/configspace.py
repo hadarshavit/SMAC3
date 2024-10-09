@@ -183,7 +183,7 @@ def print_config_changes(
 
 
 def transform_continuous_designs(
-        self, design: np.ndarray, origin: str, configspace: ConfigurationSpace
+        design: np.ndarray, origin: str, configspace: ConfigurationSpace
     ) -> list[Configuration]:
         """Transforms the continuous designs into a discrete list of configurations.
 
