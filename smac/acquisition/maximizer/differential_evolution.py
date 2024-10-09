@@ -39,7 +39,7 @@ class DifferentialEvolution(AbstractAcquisitionMaximizer):
             assert self._acquisition_function is not None
             return -self._acquisition_function([transform_continuous_designs(
                 design=np.expand_dims(x, axis=0), origin="Diffrential Evolution", configspace=self._configspace
-                )])
+                )[0]])
 
         ds = DifferentialEvolutionSolver(
             func,
@@ -63,7 +63,7 @@ class DifferentialEvolution(AbstractAcquisitionMaximizer):
         for pop, val in zip(ds.population, ds.population_energies):
             rc = transform_continuous_designs(
                 design=np.expand_dims(pop, axis=0), origin="Acquisition Function Maximizer: Differential Evolution", configspace=self._configspace
-                )
+                )[0]
             configs.append((-val, rc))
 
         configs.sort(key=lambda t: t[0])
