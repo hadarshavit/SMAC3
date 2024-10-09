@@ -16,6 +16,8 @@ from ConfigSpace.hyperparameters import (
     OrdinalHyperparameter,
     UniformFloatHyperparameter,
     UniformIntegerHyperparameter,
+    IntegerHyperparameter,
+    NumericalHyperparameter,
 )
 from ConfigSpace.util import get_one_exchange_neighbourhood
 
