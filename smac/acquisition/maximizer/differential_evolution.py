@@ -5,6 +5,7 @@ from ConfigSpace import Configuration
 from scipy.optimize._differentialevolution import DifferentialEvolutionSolver
 
 from smac.acquisition.maximizer import AbstractAcquisitionMaximizer
+from smac.utils.configspace import transform_continuous_designs
 
 __copyright__ = "Copyright 2022, automl.org"
 __license__ = "3-clause BSD"
@@ -36,7 +37,9 @@ class DifferentialEvolution(AbstractAcquisitionMaximizer):
 
         def func(x: np.ndarray) -> np.ndarray:
             assert self._acquisition_function is not None
-            return -self._acquisition_function([Configuration(self._configspace, vector=x)])
+            return -self._acquisition_function([transform_continuous_designs(
+                design=x, origin="Diffrential Evolution", configspace=self._configspace
+                )])
 
         ds = DifferentialEvolutionSolver(
             func,
