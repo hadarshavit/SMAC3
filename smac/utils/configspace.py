@@ -19,6 +19,7 @@ from ConfigSpace.hyperparameters import (
     IntegerHyperparameter,
     NumericalHyperparameter,
 )
+from ConfigSpace.util import ForbiddenValueError, deactivate_inactive_hyperparameters
 from ConfigSpace.util import get_one_exchange_neighbourhood
 
 __copyright__ = "Copyright 2022, automl.org"
