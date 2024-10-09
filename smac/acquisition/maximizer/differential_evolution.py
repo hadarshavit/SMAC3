@@ -61,8 +61,9 @@ class DifferentialEvolution(AbstractAcquisitionMaximizer):
 
         _ = ds.solve()
         for pop, val in zip(ds.population, ds.population_energies):
-            rc = Configuration(self._configspace, vector=pop)
-            rc.origin = "Acquisition Function Maximizer: Differential Evolution"
+            rc = transform_continuous_designs(
+                design=pop, origin="Acquisition Function Maximizer: Differential Evolution", configspace=self._configspace
+                )
             configs.append((-val, rc))
 
         configs.sort(key=lambda t: t[0])
