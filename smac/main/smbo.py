@@ -303,6 +303,8 @@ class SMBO:
                 # We submit the trial to the runner
                 # In multi-worker mode, SMAC waits till a new worker is available here
                 self._runner.submit_trial(trial_info=trial_info, **dask_data_to_scatter)
+
+                self.save()
             except StopIteration:
                 self._stop = True
 
