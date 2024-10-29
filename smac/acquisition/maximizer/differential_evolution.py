@@ -48,15 +48,16 @@ class DifferentialEvolution(AbstractAcquisitionMaximizer):
                  configspace: ConfigurationSpace, 
                  acquisition_function: AbstractAcquisitionFunction | None = None, 
                  max_iter: int = 1000,
-                 challengers: int = 50000, 
+                 popsize: int = 50, 
                  strategy: str = "best1bin",
                  polish: bool = True,
                  mutation: tuple[float, float] = (0.5, 1.0),
                  recombination: float =0.7,
                  seed: int = 0):
-        super().__init__(configspace, acquisition_function, challengers, seed)
+        super().__init__(configspace, acquisition_function, 1000 * 50 * len(configspace), seed)
         # raise NotImplementedError("DifferentialEvolution is not yet implemented.")
         self.max_iter = max_iter
+        self.popsize = popsize
         self.strategy = strategy
         self.polish = polish
         self.mutation = mutation
@@ -87,7 +88,7 @@ class DifferentialEvolution(AbstractAcquisitionMaximizer):
             args=(),
             strategy=self.strategy,
             maxiter=self.max_iter,
-            popsize=self._challengers // self.max_iter,
+            popsize=self.popsize,
             tol=0.01,
             mutation=self.mutation,
             recombination=self.recombination,
