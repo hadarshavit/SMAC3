@@ -36,7 +36,7 @@ class RunHistoryEncoder(AbstractRunHistoryEncoder):
         for row, (key, run) in enumerate(trials.items()):
             # Scaling is automatically done in configSpace
             conf = self.runhistory._ids_config[key.config_id]
-            conf_vector = convert_configurations_to_array([conf])[0]
+            conf_vector = np.array([conf[hp] for hp in list(conf.config_space.keys())]) #convert_configurations_to_array([conf])[0]
 
             if self._n_features > 0 and self._instance_features is not None:
                 assert isinstance(key.instance, str)

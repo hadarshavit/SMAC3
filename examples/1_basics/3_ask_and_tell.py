@@ -9,6 +9,10 @@ from ConfigSpace import Configuration, ConfigurationSpace, Float
 
 from smac import HyperparameterOptimizationFacade, Scenario
 from smac.runhistory.dataclasses import TrialValue
+from smac.runhistory.encoder import RunHistoryEncoder
+from smac.model.random_forest.random_forest import RandomForest
+from smac.acquisition.function.expected_improvement import EI
+
 
 __copyright__ = "Copyright 2021, AutoML.org Freiburg-Hannover"
 __license__ = "3-clause BSD"
@@ -43,7 +47,7 @@ if __name__ == "__main__":
     model = Rosenbrock2D()
 
     # Scenario object
-    scenario = Scenario(model.configspace, deterministic=False, n_trials=100)
+    scenario = Scenario(model.configspace, deterministic=False, n_trials=100, seed=1, output_directory='asktell')
 
     intensifier = HyperparameterOptimizationFacade.get_intensifier(
         scenario,
@@ -56,26 +60,43 @@ if __name__ == "__main__":
         model.train,
         intensifier=intensifier,
         overwrite=True,
+        runhistory_encoder=RunHistoryEncoder(scenario),
+        model=RandomForest(
+            log_y=False,
+            n_trees=10,
+            bootstrapping=True,
+            ratio_features=1.0,
+            min_samples_split=2,
+            min_samples_leaf=1,
+            max_depth=2**20,
+            configspace=scenario.configspace,
+            instance_features=scenario.instance_features,
+            seed=scenario.seed,
+        ),
+        acquisition_function=EI(log=False)
     )
 
+    min_cost = 1e8
     # We can ask SMAC which trials should be evaluated next
-    for _ in range(10):
+    for _ in range(100):
         info = smac.ask()
         assert info.seed is not None
 
         cost = model.train(info.config, seed=info.seed)
-        value = TrialValue(cost=cost, time=0.5)
+        min_cost = min(cost, min_cost)
+        value = TrialValue(cost=cost, time=0.5, additional_info={'method': 'asktell'})
 
         smac.tell(info, value)
 
     # After calling ask+tell, we can still optimize
     # Note: SMAC will optimize the next 90 trials because 10 trials already have been evaluated
-    incumbent = smac.optimize()
+    # incumbent = smac.optimize()
 
     # Get cost of default configuration
     default_cost = smac.validate(model.configspace.get_default_configuration())
     print(f"Default cost: {default_cost}")
 
     # Let's calculate the cost of the incumbent
-    incumbent_cost = smac.validate(incumbent)
-    print(f"Incumbent cost: {incumbent_cost}")
+    # incumbent_cost = smac.validate(incumbent)
+    print(f"Incumbent cost: {min_cost}")
+    # print(f"Incumbent cost: {incumbent_cost}")
