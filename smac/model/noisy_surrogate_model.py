@@ -30,19 +30,23 @@ class Schedule:
 class LinearSchedule(Schedule):
     def __call__(self, val):
         # import pdb; pdb.set_trace()
+        val = ((val - self.min_val)) / (self.max_val - self.min_val) 
+        # val[val < 1e-5] = 1e-5
         return self.total_sum * val / self.grid_sum
     
     def get_grid_sum(self, grid):
-        return grid.sum()
+        val = ((grid - self.min_val)) / (self.max_val - self.min_val) 
+        return val.sum()
     
 
 class ExponentialSchedule(Schedule):
     def __init__(self, grid, grid_sum, exp) -> None:
-        super().__init__(grid, grid_sum)
         self.exp = exp
+        super().__init__(grid, grid_sum)
 
     def __call__(self, val):
         val = ((val - self.min_val)) / (self.max_val - self.min_val) 
+        # val[val < 1e-5] = 1e-5
         val = 1 - self.exp ** val
         return self.total_sum * val / self.grid_sum
     
@@ -52,12 +56,13 @@ class ExponentialSchedule(Schedule):
         return val.sum()
 
 class PolynomialSchedule(Schedule):
-    def __init__(self, grid, base) -> None:
-        super().__init__(grid)
+    def __init__(self, grid, grid_sum, base) -> None:
         self.base = base
+        super().__init__(grid, grid_sum)
 
     def __call__(self, val):
         val = ((val - self.min_val)) / (self.max_val - self.min_val) 
+        # val[val < 1e-5] = 1e-5
         val = val ** self.base
         return self.total_sum  * val / self.grid_sum
     
@@ -65,7 +70,54 @@ class PolynomialSchedule(Schedule):
         val = ((grid - self.min_val)) / (self.max_val - self.min_val) 
         val = val ** self.base
         return val.sum()
+    
 
+class CosineSchedule(Schedule):
+    def __init__(self, grid, grid_sum) -> None:
+        super().__init__(grid, grid_sum)
+
+    def __call__(self, val):
+        val = ((val - self.min_val)) / (self.max_val - self.min_val) 
+        # val[val < 1e-5] = 1e-5
+        val = (np.cos(np.pi + val * np.pi) + 1) / 2
+        return self.total_sum  * val / self.grid_sum
+    
+    def get_grid_sum(self, grid):
+        val = ((grid - self.min_val)) / (self.max_val - self.min_val) 
+        val = (np.cos(np.pi + val * np.pi) + 1) / 2
+        return val.sum()
+
+
+class TanhSchedule(Schedule):
+    def __init__(self, grid, grid_sum) -> None:
+        super().__init__(grid, grid_sum)
+
+    def __call__(self, val):
+        val = ((val - self.min_val)) / (self.max_val - self.min_val) 
+        # val[val < 1e-5] = 1e-5
+        val = (np.tanh(4 * val - 2)) / 2 + 0.5
+        return self.total_sum  * val / self.grid_sum
+    
+    def get_grid_sum(self, grid):
+        val = ((grid - self.min_val)) / (self.max_val - self.min_val) 
+        val = (np.tanh(4 * val - 2)) / 2 + 0.5
+        return val.sum()
+    
+class HardTanhSchedule(Schedule):
+    def __init__(self, grid, grid_sum) -> None:
+        super().__init__(grid, grid_sum)
+
+    def __call__(self, val):
+        val = ((val - self.min_val)) / (self.max_val - self.min_val) 
+        # val[val < 1e-5] = 1e-5
+        val = (np.tanh(4 * val - 2)) / 2 + 0.5
+        return self.total_sum  * val / self.grid_sum
+    
+    def get_grid_sum(self, grid):
+        val = ((grid - self.min_val)) / (self.max_val - self.min_val) 
+        val = (np.tanh(8 * val - 4)) / 2 + 0.5
+        return val.sum()
+    
 
 class BBOBNoiseLevel:
     def __init__(self, f: ioh.ProblemType, base_noise, schedule) -> None:
@@ -106,10 +158,11 @@ class BBOBDistanceToOptimum(BBOBNoiseLevel):
     
 
 class NoisySurrogateModel(AbstractModel):
-    def __init__(self, noise_type, target_function, **kwargs) -> None:
+    def __init__(self, noise_type, target_function, min_noise, **kwargs) -> None:
         super().__init__(**kwargs)
         self.noise_type = noise_type
         self.target_function = target_function
+        self.min_noise = min_noise
 
     def _train(self, X: np.ndarray, Y: np.ndarray) -> NoisySurrogateModel:
         if not isinstance(X, np.ndarray):
@@ -132,8 +185,12 @@ class NoisySurrogateModel(AbstractModel):
             raise NotImplementedError("X has to be of type np.ndarray.")
 
         ground_truth = np.array(self.target_function(X))
-        noise_levels = self.noise_type(X, ground_truth)
+        noise_levels = self.noise_type(X, ground_truth) + self.min_noise
+        
+
+        # if (noise_levels <= 0).any():
+        #     import pdb; pdb.set_trace()
         mu_noise = np.random.normal(loc=0, scale=noise_levels, size=ground_truth.shape)
         sigma_noise = np.random.normal(loc=0, scale=noise_levels, size=ground_truth.shape)
 
-        return ground_truth + mu_noise, mu_noise + sigma_noise
+        return ground_truth + mu_noise, np.power(np.abs(mu_noise) + np.abs(sigma_noise), 2)
