@@ -14,109 +14,74 @@ logger = get_logger(__name__)
 
 
 class Schedule:
-    def __init__(self, grid, grid_sum) -> None:
-        self.min_val = grid.min()
-        self.max_val = grid.max()
-        self.total_sum = grid_sum
-        self.grid_sum = self.get_grid_sum(grid)
+    def __init__(self, min_val, max_val) -> None:
+        self.min_val = min_val
+        self.max_val = max_val
+        self.total_sum = 1.0
+        self.grid_sum = self.get_integral()
 
     def __call__(self, val):
-        raise NotImplementedError()
+        val = ((val - self.min_val)) / (self.max_val - self.min_val) 
+        val = self._calc(val)
+        return val / self.grid_sum
     
-    def get_grid_sum(self, grid):
+    def _calc(self, val):
         raise NotImplementedError()
 
+    def get_integral(self):
+        raise NotImplementedError()
 
 class LinearSchedule(Schedule):
-    def __call__(self, val):
-        # import pdb; pdb.set_trace()
-        val = ((val - self.min_val)) / (self.max_val - self.min_val) 
-        # val[val < 1e-5] = 1e-5
-        return self.total_sum * val / self.grid_sum
+    def _calc(self, val):  
+        return val
     
-    def get_grid_sum(self, grid):
-        val = ((grid - self.min_val)) / (self.max_val - self.min_val) 
-        return val.sum()
-    
+    def get_integral(self):
+        return 0.5
 
 class ExponentialSchedule(Schedule):
-    def __init__(self, grid, grid_sum, exp) -> None:
+    def __init__(self, min_val, max_val, exp) -> None:
         self.exp = exp
-        super().__init__(grid, grid_sum)
+        super().__init__(min_val, max_val)
 
-    def __call__(self, val):
-        val = ((val - self.min_val)) / (self.max_val - self.min_val) 
-        # val[val < 1e-5] = 1e-5
-        val = 1 - self.exp ** val
-        return self.total_sum * val / self.grid_sum
-    
-    def get_grid_sum(self, grid):
-        val = ((grid - self.min_val)) / (self.max_val - self.min_val) 
-        val = 1 - self.exp ** val
-        return val.sum()
+    def _calc(self, val):
+        return (1 - self.exp ** val) / 0.9
+
+    def get_integral(self):
+        return 1 / 0.9 + (1 - self.exp) / (0.9 * np.log(self.exp))
+
 
 class PolynomialSchedule(Schedule):
-    def __init__(self, grid, grid_sum, base) -> None:
+    def __init__(self, min_val, max_val, base) -> None:
         self.base = base
-        super().__init__(grid, grid_sum)
+        super().__init__(min_val, max_val)
 
-    def __call__(self, val):
-        val = ((val - self.min_val)) / (self.max_val - self.min_val) 
-        # val[val < 1e-5] = 1e-5
-        val = val ** self.base
-        return self.total_sum  * val / self.grid_sum
+    def _calc(self, val):
+        return val ** self.base
     
-    def get_grid_sum(self, grid):
-        val = ((grid - self.min_val)) / (self.max_val - self.min_val) 
-        val = val ** self.base
-        return val.sum()
-    
+    def get_integral(self):
+        return 1 / (self.base + 1)
 
 class CosineSchedule(Schedule):
-    def __init__(self, grid, grid_sum) -> None:
-        super().__init__(grid, grid_sum)
+    def _calc(self, val):
+        return (np.cos(np.pi + val * np.pi) + 1) / 2
 
-    def __call__(self, val):
-        val = ((val - self.min_val)) / (self.max_val - self.min_val) 
-        # val[val < 1e-5] = 1e-5
-        val = (np.cos(np.pi + val * np.pi) + 1) / 2
-        return self.total_sum  * val / self.grid_sum
+    def get_integral(self):
+        return 0.5
     
-    def get_grid_sum(self, grid):
-        val = ((grid - self.min_val)) / (self.max_val - self.min_val) 
-        val = (np.cos(np.pi + val * np.pi) + 1) / 2
-        return val.sum()
-
 
 class TanhSchedule(Schedule):
-    def __init__(self, grid, grid_sum) -> None:
-        super().__init__(grid, grid_sum)
-
-    def __call__(self, val):
-        val = ((val - self.min_val)) / (self.max_val - self.min_val) 
-        # val[val < 1e-5] = 1e-5
-        val = (np.tanh(4 * val - 2)) / 2 + 0.5
-        return self.total_sum  * val / self.grid_sum
+    def _calc(self, val):
+        return (np.tanh(4 * val - 2)) / 2 + 0.5
     
-    def get_grid_sum(self, grid):
-        val = ((grid - self.min_val)) / (self.max_val - self.min_val) 
-        val = (np.tanh(4 * val - 2)) / 2 + 0.5
-        return val.sum()
+    def get_integral(self):
+        return 0.5
     
 class HardTanhSchedule(Schedule):
-    def __init__(self, grid, grid_sum) -> None:
-        super().__init__(grid, grid_sum)
-
-    def __call__(self, val):
-        val = ((val - self.min_val)) / (self.max_val - self.min_val) 
-        # val[val < 1e-5] = 1e-5
-        val = (np.tanh(4 * val - 2)) / 2 + 0.5
-        return self.total_sum  * val / self.grid_sum
+    def _calc(self, val):
+        return (np.tanh(8 * val - 4)) / 2 + 0.5
     
-    def get_grid_sum(self, grid):
-        val = ((grid - self.min_val)) / (self.max_val - self.min_val) 
-        val = (np.tanh(8 * val - 4)) / 2 + 0.5
-        return val.sum()
+    def get_integral(self):
+        return 0.5
     
 
 class BBOBNoiseLevel:
