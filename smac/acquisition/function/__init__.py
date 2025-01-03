@@ -6,6 +6,7 @@ from smac.acquisition.function.expected_improvement import EI, EIPS
 from smac.acquisition.function.integrated_acquisition_function import (
     IntegratedAcquisitionFunction,
 )
+from smac.acquisition.function.mace import MACE
 from smac.acquisition.function.prior_acquisition_function import (
     PriorAcquisitionFunction,
 )
@@ -21,4 +22,5 @@ __all__ = [
     "TS",
     "PriorAcquisitionFunction",
     "IntegratedAcquisitionFunction",
+    "MACE",
 ]

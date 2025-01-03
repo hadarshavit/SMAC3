@@ -56,6 +56,9 @@ extras_require = {
         "pytest-coverage",
         "pytest-cases",
     ],
+    "mace": [
+        "pymoo"
+    ]
 }
 
 setuptools.setup(

@@ -6,6 +6,7 @@ from smac.acquisition.maximizer.local_and_random_search import (
     LocalAndSortedRandomSearch,
 )
 from smac.acquisition.maximizer.local_search import LocalSearch
+from smac.acquisition.maximizer.nsgaii import NSGAII
 from smac.acquisition.maximizer.random_search import RandomSearch
 
 __all__ = [
@@ -14,4 +15,5 @@ __all__ = [
     "LocalAndSortedRandomSearch",
     "LocalSearch",
     "RandomSearch",
+    "NSGAII",
 ]
