@@ -21,10 +21,6 @@ on:
       - main
       - development
 
-  schedule:
-    # Every day at 7AM UTC
-    - cron: '0 07 * * *'
-
 env:
   package-name: smac
   test-dir: tests
