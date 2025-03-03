@@ -1,8 +1,6 @@
 name: Recent-Reminder
 
 on:
-  schedule:
-    - cron: '00 13 * * 1'
   workflow_dispatch:
 
 jobs:

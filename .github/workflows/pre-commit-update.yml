@@ -1,9 +1,6 @@
 name: Pre-commit auto-update
 
 on:
-  # every Monday at 1pm utc
-  schedule:
-    - cron: "0 13 * * 1"
   # on demand
   workflow_dispatch:
 
