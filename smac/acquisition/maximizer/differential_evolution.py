@@ -81,6 +81,7 @@ class DifferentialEvolution(AbstractAcquisitionMaximizer):
         challengers: int = 50000,
         strategy: str = "best1bin",
         polish: bool = True,
+        tol: float = 0.01,
         mutation: tuple[float, float] = (0.5, 1.0),
         recombination: float = 0.7,
         seed: int = 0,
@@ -92,6 +93,7 @@ class DifferentialEvolution(AbstractAcquisitionMaximizer):
         self.polish = polish
         self.mutation = mutation
         self.recombination = recombination
+        self.tol = tol
 
     def _maximize(
         self,
@@ -130,7 +132,7 @@ class DifferentialEvolution(AbstractAcquisitionMaximizer):
             strategy=self.strategy,
             maxiter=self.max_iter,
             popsize=self._challengers // self.max_iter,
-            tol=0.01,
+            tol=self.tol,
             mutation=self.mutation,
             recombination=self.recombination,
             polish=self.polish,
