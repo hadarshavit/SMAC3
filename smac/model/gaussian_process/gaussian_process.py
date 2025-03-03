@@ -57,6 +57,7 @@ class GaussianProcess(AbstractGaussianProcess):
         configspace: ConfigurationSpace,
         kernel: Kernel,
         n_restarts: int = 10,
+        max_iter=15000,
         normalize_y: bool = True,
         instance_features: dict[str, list[int | float]] | None = None,
         pca_components: int | None = 7,
@@ -72,6 +73,7 @@ class GaussianProcess(AbstractGaussianProcess):
 
         self._normalize_y = normalize_y
         self._n_restarts = n_restarts
+        self._maxiter = max_iter
 
         # Internal variables
         self._hypers = np.empty((0,))
@@ -223,7 +225,7 @@ class GaussianProcess(AbstractGaussianProcess):
         theta_star: np.ndarray | None = None
         f_opt_star = np.inf
         for i, start_point in enumerate(p0):
-            theta, f_opt, _ = optimize.fmin_l_bfgs_b(self._nll, start_point, bounds=log_bounds)
+            theta, f_opt, _ = optimize.fmin_l_bfgs_b(self._nll, start_point, bounds=log_bounds, maxiter=self._maxiter)
             if f_opt < f_opt_star:
                 f_opt_star = f_opt
                 theta_star = theta
