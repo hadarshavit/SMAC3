@@ -78,6 +78,7 @@ class DifferentialEvolution(AbstractAcquisitionMaximizer):
         configspace: ConfigurationSpace,
         acquisition_function: AbstractAcquisitionFunction | None = None,
         max_iter: int = 1000,
+        popsize: int = 100,
         challengers: int = 50000,
         strategy: str = "best1bin",
         polish: bool = True,
@@ -93,6 +94,7 @@ class DifferentialEvolution(AbstractAcquisitionMaximizer):
         self.polish = polish
         self.mutation = mutation
         self.recombination = recombination
+        self.popsize = popsize
         self.tol = tol
 
     def _maximize(
@@ -131,7 +133,7 @@ class DifferentialEvolution(AbstractAcquisitionMaximizer):
             args=(),
             strategy=self.strategy,
             maxiter=self.max_iter,
-            popsize=self._challengers // self.max_iter,
+            popsize=self.popsize,
             tol=self.tol,
             mutation=self.mutation,
             recombination=self.recombination,
