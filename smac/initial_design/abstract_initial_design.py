@@ -6,6 +6,7 @@ from typing import Any
 from collections import OrderedDict
 
 import numpy as np
+import math
 from ConfigSpace.configuration_space import Configuration
 
 from smac.scenario import Scenario
@@ -41,7 +42,7 @@ class AbstractInitialDesign:
         self,
         scenario: Scenario,
         n_configs: int | None = None,
-        n_configs_per_hyperparameter: int | None = 10,
+        n_configs_per_hyperparameter: float | None = 10,
         max_ratio: float = 0.25,
         additional_configs: list[Configuration] = None,
         seed: int | None = None,
@@ -74,7 +75,7 @@ class AbstractInitialDesign:
             logger.info("Using `n_configs` and ignoring `n_configs_per_hyperparameter`.")
             self._n_configs = n_configs
         elif n_configs_per_hyperparameter is not None:
-            self._n_configs = n_configs_per_hyperparameter * n_params
+            self._n_configs = math.ceil(n_configs_per_hyperparameter * n_params)
         else:
             raise ValueError(
                 "Need to provide either argument `n_configs` or "
