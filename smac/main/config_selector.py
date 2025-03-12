@@ -51,7 +51,7 @@ class ConfigSelector:
         scenario: Scenario,
         *,
         retrain_after: int = 8,
-        retries: int = 16,
+        retries: int = 2048,
         min_trials: int = 1,
     ) -> None:
         # Those are the configs sampled from the passed initial design
