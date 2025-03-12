@@ -239,7 +239,21 @@ class ConfigSelector:
                     # We exit the loop if we have tried to add the same configuration too often
                     if failed_counter == self._retries:
                         logger.warning(f"Could not return a new configuration after {self._retries} retries." "")
-                        return
+                        random_configs_retries = 0
+                        while counter < self._retrain_after and random_configs_retries < self._retries:
+                            config = self._configspace.sample_configuration()
+                            if config not in self._processed_configs:
+                                counter += 1
+                                config.origin = "Random Search (max retries, no candidates)"
+                                self._processed_configs.append(config)
+                                self._call_callbacks_on_end(config)
+                                yield config
+                                retrain = counter == self._retrain_after
+                                self._call_callbacks_on_start()
+                            else:
+                                random_configs_retries += 1
+
+                        break
 
     def _call_callbacks_on_start(self) -> None:
         for callback in self._callbacks:
