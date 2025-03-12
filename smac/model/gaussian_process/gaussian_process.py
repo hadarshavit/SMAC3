@@ -248,8 +248,8 @@ class GaussianProcess(AbstractGaussianProcess):
         mus = []
         mu = np.array([])  # Initialize mu
         var = np.array([])  # Initialize var
-        for i in range(int(np.ceil(len(X_test) / 5000))):
-            X_test_cur = X_test[5000 * i: min(5000 * (i + 1), len(X_test))]
+        for i in range(int(np.ceil(len(X_test) / 1000))):
+            X_test_cur = X_test[1000 * i: min(1000 * (i + 1), len(X_test))]
             if covariance_type is None:
                 mu = self._gp.predict(X_test_cur)
                 var = None
