@@ -253,6 +253,16 @@ class ConfigSelector:
                             else:
                                 random_configs_retries += 1
 
+                        if random_configs_retries < self._retries:
+                            while counter < self._retrain_after:
+                                config = self._configspace.sample_configuration()
+                                counter += 1
+                                config.origin = "Random Search (max retries, no candidates)"
+                                self._processed_configs.append(config)
+                                self._call_callbacks_on_end(config)
+                                yield config
+                                retrain = counter == self._retrain_after
+                                self._call_callbacks_on_start()
                         break
 
     def _call_callbacks_on_start(self) -> None:
