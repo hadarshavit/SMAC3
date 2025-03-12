@@ -244,34 +244,44 @@ class GaussianProcess(AbstractGaussianProcess):
             raise Exception("Model has to be trained first!")
 
         X_test = self._impute_inactive(X)
+        vars = []
+        mus = []
+        mu = np.array([])  # Initialize mu
+        var = np.array([])  # Initialize var
+        for i in range(int(np.ceil(len(X_test) / 5000))):
+            X_test_cur = X_test[5000 * i: min(5000 * (i + 1), len(X_test))]
+            if covariance_type is None:
+                mu = self._gp.predict(X_test_cur)
+                var = None
 
+                if self._normalize_y:
+                    mu = self._untransform_y(mu)
+            else:
+                predict_kwargs = {"return_cov": False, "return_std": True}
+                if covariance_type == "full":
+                    predict_kwargs = {"return_cov": True, "return_std": False}
+
+                mu, var = self._gp.predict(X_test_cur, **predict_kwargs)
+
+                if covariance_type != "full":
+                    var = var**2  # Since we get standard deviation for faster computation
+
+                # Clip negative variances and set them to the smallest
+                # positive float value
+                var = np.clip(var, VERY_SMALL_NUMBER, np.inf)
+
+                if self._normalize_y:
+                    mu, var = self._untransform_y(mu, var)
+
+                if covariance_type == "std":
+                    var = np.sqrt(var)  # Converting variance to std deviation if specified
+            vars.append(var)
+            mus.append(mu)
+        
         if covariance_type is None:
-            mu = self._gp.predict(X_test)
-            var = None
-
-            if self._normalize_y:
-                mu = self._untransform_y(mu)
+            return np.hstack(mus), None
         else:
-            predict_kwargs = {"return_cov": False, "return_std": True}
-            if covariance_type == "full":
-                predict_kwargs = {"return_cov": True, "return_std": False}
-
-            mu, var = self._gp.predict(X_test, **predict_kwargs)
-
-            if covariance_type != "full":
-                var = var**2  # Since we get standard deviation for faster computation
-
-            # Clip negative variances and set them to the smallest
-            # positive float value
-            var = np.clip(var, VERY_SMALL_NUMBER, np.inf)
-
-            if self._normalize_y:
-                mu, var = self._untransform_y(mu, var)
-
-            if covariance_type == "std":
-                var = np.sqrt(var)  # Converting variance to std deviation if specified
-
-        return mu, var
+            return np.hstack(mus), np.hstack(vars)
 
     def sample_functions(self, X_test: np.ndarray, n_funcs: int = 1) -> np.ndarray:
         """Samples F function values from the current posterior at the N specified test points.
