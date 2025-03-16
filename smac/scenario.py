@@ -89,7 +89,7 @@ class Scenario:
 
     # Objectives
     objectives: str | list[str] = "cost"
-    crash_cost: float | list[float] = 2**31 - 1
+    crash_cost: float | list[float] = float(2**31 - 1)
     termination_cost_threshold: float | list[float] = np.inf
 
     # Limitations

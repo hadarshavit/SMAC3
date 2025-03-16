@@ -203,8 +203,8 @@ class RandomForest(AbstractRandomForest):
 
         if self._log_y:
             means, vars_ = [], []
-            for i in range(int(np.ceil(len(X) / 1000))):
-                X_test_cur = X[1000 * i : min(1000 * (i + 1), len(X))]
+            for i in range(int(np.ceil(len(X) / 5000))):
+                X_test_cur = X[5000 * i : min(5000 * (i + 1), len(X))]
 
                 all_preds = []
                 third_dimension = 0

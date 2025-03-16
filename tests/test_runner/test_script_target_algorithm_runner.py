@@ -58,7 +58,7 @@ def test_crashed(configspace, make_scenario):
     status, cost, runtime, cpu_time, additional_info = runner.run(config, instance=scenario.instances[0], seed=0)
 
     assert status == StatusType.CRASHED
-    assert cost == np.inf
+    assert cost == 2**31 - 1
 
 
 def test_python(configspace, make_scenario):

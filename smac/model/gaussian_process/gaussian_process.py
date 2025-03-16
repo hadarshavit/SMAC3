@@ -249,7 +249,7 @@ class GaussianProcess(AbstractGaussianProcess):
         mu = np.array([])  # Initialize mu
         var = np.array([])  # Initialize var
         for i in range(int(np.ceil(len(X_test) / 1000))):
-            X_test_cur = X_test[1000 * i: min(1000 * (i + 1), len(X_test))]
+            X_test_cur = X_test[1000 * i : min(1000 * (i + 1), len(X_test))]
             if covariance_type is None:
                 mu = self._gp.predict(X_test_cur)
                 var = None
@@ -277,7 +277,7 @@ class GaussianProcess(AbstractGaussianProcess):
                     var = np.sqrt(var)  # Converting variance to std deviation if specified
             vars.append(var)
             mus.append(mu)
-        
+
         if covariance_type is None:
             return np.hstack(mus), None
         else:
@@ -302,10 +302,19 @@ class GaussianProcess(AbstractGaussianProcess):
             raise Exception("Model has to be trained first.")
 
         X_test = self._impute_inactive(X_test)
-        funcs = self._gp.sample_y(X_test, n_samples=n_funcs, random_state=self._rng)
 
-        if self._normalize_y:
-            funcs = self._untransform_y(funcs)
+        all_funcs = []
+        for i in range(int(np.ceil(len(X_test) / 1000))):
+            X_test_cur = X_test[1000 * i : min(1000 * (i + 1), len(X_test))]
+
+            funcs = self._gp.sample_y(X_test_cur, n_samples=n_funcs, random_state=self._rng)
+
+            if self._normalize_y:
+                funcs = self._untransform_y(funcs)
+
+            all_funcs.extend(funcs)
+
+        funcs = np.array(all_funcs)
 
         if len(funcs.shape) == 1:
             return funcs[None, :]

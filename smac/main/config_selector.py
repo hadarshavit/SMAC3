@@ -241,7 +241,7 @@ class ConfigSelector:
                         logger.warning(f"Could not return a new configuration after {self._retries} retries." "")
                         random_configs_retries = 0
                         while counter < self._retrain_after and random_configs_retries < self._retries:
-                            config = self._configspace.sample_configuration()
+                            config = self._scenario.configspace.sample_configuration()
                             if config not in self._processed_configs:
                                 counter += 1
                                 config.origin = "Random Search (max retries, no candidates)"
@@ -255,7 +255,7 @@ class ConfigSelector:
 
                         if random_configs_retries < self._retries:
                             while counter < self._retrain_after:
-                                config = self._configspace.sample_configuration()
+                                config = self._scenario.configspace.sample_configuration()
                                 counter += 1
                                 config.origin = "Random Search (max retries, no candidates)"
                                 self._processed_configs.append(config)
