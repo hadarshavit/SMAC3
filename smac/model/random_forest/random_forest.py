@@ -11,7 +11,7 @@ from pyrfr.regression import default_data_container as DataContainer
 from smac.constants import N_TREES, VERY_SMALL_NUMBER
 from smac.model.random_forest import AbstractRandomForest
 
-__copyright__ = "Copyright 2022, automl.org"
+__copyright__ = "Copyright 2025, Leibniz University Hanover, Institute of AI"
 __license__ = "3-clause BSD"
 
 
@@ -202,21 +202,36 @@ class RandomForest(AbstractRandomForest):
         X = self._impute_inactive(X)
 
         if self._log_y:
-            all_preds = []
-            third_dimension = 0
-
             means, vars_ = [], []
-            for row_X in X:
-                preds_per_tree = self._rf.all_leaf_values(row_X)
-                means_per_tree = []
-                for preds in preds_per_tree:
-                    # within one tree, we want to use the
-                    # arithmetic mean and not the geometric mean
-                    means_per_tree.append(np.log(np.mean(np.exp(preds))))
-                mean = np.mean(means_per_tree)
-                var = np.var(means_per_tree) # variance over trees as uncertainty estimate
-                means.append(mean)
-                vars_.append(var)
+            for i in range(int(np.ceil(len(X) / 1000))):
+                X_test_cur = X[1000 * i : min(1000 * (i + 1), len(X))]
+
+                all_preds = []
+                third_dimension = 0
+
+                # Gather data in a list of 2d arrays and get statistics about the required size of the 3d array
+                for row_X in X_test_cur:
+                    preds_per_tree = self._rf.all_leaf_values(row_X)
+                    all_preds.append(preds_per_tree)
+                    max_num_leaf_data = max(map(len, preds_per_tree))
+                    third_dimension = max(max_num_leaf_data, third_dimension)
+
+                # Transform list of 2d arrays into a 3d array
+                preds_as_array = np.zeros((X_test_cur.shape[0], self._rf_opts.num_trees, third_dimension)) * np.nan
+                for i, preds_per_tree in enumerate(all_preds):
+                    for j, pred in enumerate(preds_per_tree):
+                        preds_as_array[i, j, : len(pred)] = pred
+
+                # Do all necessary computation with vectorized functions
+                preds_as_array = np.log(np.nanmean(np.exp(preds_as_array), axis=2) + VERY_SMALL_NUMBER)
+
+                # Compute the mean and the variance across the different trees
+                cur_means = preds_as_array.mean(axis=1)
+                cur_vars_ = preds_as_array.var(axis=1)
+
+                means.extend(cur_means)
+                vars_.extend(cur_vars_)
+
         else:
             means, vars_ = [], []
             for row_X in X:
