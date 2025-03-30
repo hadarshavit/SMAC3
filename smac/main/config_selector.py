@@ -236,8 +236,8 @@ class ConfigSelector:
                 else:
                     failed_counter += 1
 
-                    # We exit the loop if we have tried to add the same configuration too often
-                    if failed_counter == self._retries or failed_counter == len(challengers):
+                    # We exit the loop if we have tried to add the same configuration too often or the acquisition function is out of candidates
+                    if failed_counter == self._retries or len(challengers) == 0:
                         logger.warning(f"Could not return a new configuration after {failed_counter} retries.")
                         random_configs_retries = 0
                         while counter < self._retrain_after and random_configs_retries < self._retries:
