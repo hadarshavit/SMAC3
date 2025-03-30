@@ -236,34 +236,38 @@ class ConfigSelector:
                 else:
                     failed_counter += 1
 
-                    # We exit the loop if we have tried to add the same configuration too often or the acquisition function is out of candidates
-                    if failed_counter == self._retries or len(challengers) == 0:
+                    # We exit the loop if we have tried to add the same configuration too often
+                    if failed_counter == self._retries:
                         logger.warning(f"Could not return a new configuration after {failed_counter} retries.")
-                        random_configs_retries = 0
-                        while counter < self._retrain_after and random_configs_retries < self._retries:
-                            config = self._scenario.configspace.sample_configuration()
-                            if config not in self._processed_configs:
-                                counter += 1
-                                config.origin = "Random Search (max retries, no candidates)"
-                                self._processed_configs.append(config)
-                                self._call_callbacks_on_end(config)
-                                yield config
-                                retrain = counter == self._retrain_after
-                                self._call_callbacks_on_start()
-                            else:
-                                random_configs_retries += 1
-
-                        if random_configs_retries < self._retries:
-                            while counter < self._retrain_after:
-                                config = self._scenario.configspace.sample_configuration()
-                                counter += 1
-                                config.origin = "Random Search (max retries, no candidates)"
-                                self._processed_configs.append(config)
-                                self._call_callbacks_on_end(config)
-                                yield config
-                                retrain = counter == self._retrain_after
-                                self._call_callbacks_on_start()
                         break
+            
+            # if we don't have enough configurations, we want to sample random configurations
+            if not retrain:
+                random_configs_retries = 0
+                while counter < self._retrain_after and random_configs_retries < self._retries:
+                    config = self._scenario.configspace.sample_configuration()
+                    if config not in self._processed_configs:
+                        counter += 1
+                        config.origin = "Random Search (max retries, no candidates)"
+                        self._processed_configs.append(config)
+                        self._call_callbacks_on_end(config)
+                        yield config
+                        retrain = counter == self._retrain_after
+                        self._call_callbacks_on_start()
+                    else:
+                        random_configs_retries += 1
+
+                if random_configs_retries < self._retries:
+                    while counter < self._retrain_after:
+                        config = self._scenario.configspace.sample_configuration()
+                        counter += 1
+                        config.origin = "Random Search (max retries, no candidates)"
+                        self._processed_configs.append(config)
+                        self._call_callbacks_on_end(config)
+                        yield config
+                        retrain = counter == self._retrain_after
+                        self._call_callbacks_on_start()
+                
 
     def _call_callbacks_on_start(self) -> None:
         for callback in self._callbacks:
