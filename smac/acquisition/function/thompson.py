@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from smac import Scenario
+from smac.scenario import Scenario
 from smac.acquisition.function.abstract_acquisition_function import (
     AbstractAcquisitionFunction,
 )
