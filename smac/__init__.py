@@ -20,7 +20,7 @@ copyright = (
     "Matthias Feurer, André Biedenkapp, Difan Deng, Carolin Benjamins, Tim Ruhkopf, René Sass "
     "and Frank Hutter"
 )
-version = "2.3.1post17"
+version = "2.3.1post18"
 
 
 try:
