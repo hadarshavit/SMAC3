@@ -23,6 +23,6 @@ class RunHistoryScaledEncoder(RunHistoryEncoder):
 
         # Linear scaling
         # prevent diving by zero
-        min_y[np.where(min_y == self._max_y)] *= 1 - 10**-101
+        min_y[np.where(min_y == self._max_y)] *= 1 - 10**-10
         values = (values - min_y) / (self._max_y - min_y)
         return values
