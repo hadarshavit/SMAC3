@@ -62,4 +62,10 @@ class TS(AbstractAcquisitionFunction):
         m = m.flatten()
         var_ = np.diag(var_.flatten())
 
-        return -rng.multivariate_normal(m, var_, 1).T
+        try:
+            return -rng.multivariate_normal(m, var_, 1).T
+        except np.linalg.LinAlgError as e:
+            logger.warning(
+                "Thompson sampling failed due to a linear algebra error. " "We will use the mean value instead."
+            )
+            return -m
