@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 
+from smac import Scenario
 from smac.acquisition.function.abstract_acquisition_function import (
     AbstractAcquisitionFunction,
 )
@@ -30,6 +31,10 @@ class TS(AbstractAcquisitionFunction):
         TS does not require xi here, we only wants to make it consistent with other acquisition functions.
     """
 
+    def __init__(self, scenario: Scenario, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self._rng = np.random.default_rng(scenario.seed)
+
     @property
     def name(self) -> str:  # noqa: D102
         return "Thompson Sampling"
@@ -55,15 +60,20 @@ class TS(AbstractAcquisitionFunction):
 
         sample_function = getattr(self._model, "sample_functions", None)
         if callable(sample_function):
-            return -sample_function(X, n_funcs=1)
+            try:
+                return -sample_function(X, n_funcs=1)
+            except np.linalg.LinAlgError as e:
+                logger.warning(
+                    "Thompson sampling failed due to a linear algebra error. " "We will use the mean value instead."
+                )
+                return -self._model.predict(X)
 
         m, var_ = self._model.predict_marginalized(X)
-        rng = self._model._rng
         m = m.flatten()
         var_ = np.diag(var_.flatten())
 
         try:
-            return -rng.multivariate_normal(m, var_, 1).T
+            return -self._rng.multivariate_normal(m, var_, 1).T
         except np.linalg.LinAlgError as e:
             logger.warning(
                 "Thompson sampling failed due to a linear algebra error. " "We will use the mean value instead."
