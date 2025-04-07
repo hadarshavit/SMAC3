@@ -66,7 +66,7 @@ class TS(AbstractAcquisitionFunction):
                 logger.warning(
                     "Thompson sampling failed due to a linear algebra error. " "We will use the mean value instead."
                 )
-                return -self._model.predict(X)
+                return -self._model.predict(X)[0]
 
         m, var_ = self._model.predict_marginalized(X)
         m = m.flatten()
