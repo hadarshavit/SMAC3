@@ -3,6 +3,7 @@ from typing import Any
 import numpy as np
 import pytest
 
+from smac import Scenario
 from smac.acquisition.function import (
     EI,
     EIPS,
@@ -719,7 +720,8 @@ def test_lcb_NxD(model, acq_lcb):
 
 @pytest.fixture
 def acq_ts(model):
-    ts = TS()
+    scenario = Scenario(configspace=None, seed=0)
+    ts = TS(scenario)
     ts.model = model
     return ts
 
@@ -748,13 +750,15 @@ def test_ts_NxD(model, acq_ts):
 
 def test_ts_rng():
     """Test TS acquisition function with model that only has attribute 'rng'"""
+    scenario = Scenario(configspace=None, seed=0)
     model = MockModelRNG()
-    ts = TS()
+    ts = TS(scenario)
     ts.model = model
 
 
 def test_ts_sampler():
     "Test TS acquisition function with model that only has attribute 'sample_functions'"
+    scenario = Scenario(configspace=None, seed=0)
     model = MockModelSampler()
-    ts = TS()
+    ts = TS(scenario)
     ts.model = model

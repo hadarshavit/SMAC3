@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import numpy as np
 
-from smac.scenario import Scenario
 from smac.acquisition.function.abstract_acquisition_function import (
     AbstractAcquisitionFunction,
 )
+from smac.scenario import Scenario
 from smac.utils.logging import get_logger
 
 __copyright__ = "Copyright 2025, Leibniz University Hanover, Institute of AI"
@@ -72,8 +72,13 @@ class TS(AbstractAcquisitionFunction):
         m = m.flatten()
         var_ = np.diag(var_.flatten())
 
+        if hasattr(self._model._rng, "multivariate_normal"):
+            rng = self._model._rng
+        else:
+            rng = self._rng
+
         try:
-            return -self._rng.multivariate_normal(m, var_, 1).T
+            return -rng.multivariate_normal(m, var_, 1).T
         except np.linalg.LinAlgError as e:
             logger.warning(
                 "Thompson sampling failed due to a linear algebra error. " "We will use the mean value instead."
