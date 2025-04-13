@@ -177,7 +177,7 @@ class DaskParallelRunner(AbstractRunner):
     def close(self, force: bool = False) -> None:
         """Closes the client."""
         if self._close_client_at_del or force:
-            self._client.close()
+            self._client.shutdown()
 
     def _process_pending_trials(self) -> None:
         """The completed trials are moved from ``self._pending_trials`` to ``self._results_queue``.
