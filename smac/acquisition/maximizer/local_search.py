@@ -118,7 +118,7 @@ class LocalSearch(AbstractAcquisitionMaximizer):
         # Sort according to acq value
         configs_acq.sort(reverse=True, key=lambda x: x[0])
         for a, inc in configs_acq:
-            inc.origin = "Local Search"
+            inc.origin = "Acquisition Function Maximizer: Local Search"
 
         return configs_acq
 
@@ -424,7 +424,7 @@ class LocalSearch(AbstractAcquisitionMaximizer):
                             if acq_val[acq_index] > acq_val_candidates[i]:
                                 is_valid = False
                                 try:
-                                    neighbors[acq_index].is_valid_configuration()
+                                    neighbors[acq_index].check_valid_configuration()
                                     is_valid = True
                                 except (ValueError, ForbiddenValueError) as e:
                                     logger.debug("Local search %d: %s", i, e)
