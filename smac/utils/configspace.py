@@ -44,7 +44,9 @@ def convert_configurations_to_array(configs: list[Configuration]) -> np.ndarray:
     -------
     np.ndarray
     """
-    return np.array([config.get_array() for config in configs], dtype=np.float64)
+    # return np.array([config.get_array() for config in configs], dtype=np.float64)
+    cs = configs[0].config_space
+    return np.array([[conf[hp] for hp in list(cs.keys())] for conf in configs], dtype=np.float64) 
 
 
 def get_types(

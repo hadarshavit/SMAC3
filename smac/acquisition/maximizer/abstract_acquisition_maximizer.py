@@ -102,6 +102,7 @@ class AbstractAcquisitionMaximizer:
             # since maximize returns a tuple of acquisition value and configuration,
             # and we only need the configuration, we return the second element of the tuple
             # for each element in the list
+            # print([t[1] for t in self._maximize(previous_configs, n_points)][:10])
             return [t[1] for t in self._maximize(previous_configs, n_points)]
 
         challengers = ChallengerList(
@@ -154,7 +155,7 @@ class AbstractAcquisitionMaximizer:
         """
         assert self._acquisition_function is not None
         acq_values = self._acquisition_function(configs)
-
+        
         # From here
         # http://stackoverflow.com/questions/20197990/how-to-make-argsort-result-to-be-random-between-equal-values
         random = self._rng.rand(len(acq_values))

@@ -11,6 +11,7 @@ from smac.acquisition.function.prior_acquisition_function import (
 )
 from smac.acquisition.function.probability_improvement import PI
 from smac.acquisition.function.thompson import TS
+from smac.acquisition.function.confidence_bound_simple import SimpleBound
 
 __all__ = [
     "AbstractAcquisitionFunction",

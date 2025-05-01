@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+import pandas as pd
 import ioh
 from functools import partial
 
@@ -117,9 +118,10 @@ class BBOBValueBased(BBOBNoiseLevel):
 
 
 class BBOBDistanceToOptimum(BBOBNoiseLevel):
-    def __init__(self, f: ioh.ProblemType, base_noise, schedule, distance_function) -> None:
+    def __init__(self, f: ioh.ProblemType, base_noise, schedule, distance_function, opt_x) -> None:
         super().__init__(f, base_noise, schedule)
         self.distance_function = distance_function
+        self.opt_x = opt_x
 
     # def get_max_distance(self):
     #     max_dist_point = [5 if x < 0 else -5 for x in self.f.optimum.x]
@@ -127,18 +129,18 @@ class BBOBDistanceToOptimum(BBOBNoiseLevel):
     #     return max_dist
 
     def __call__(self, xs, ground_truths):
-        distances = np.apply_along_axis(partial(self.distance_function, self.f.optimum.x), 1, xs)
+        distances = np.apply_along_axis(partial(self.distance_function, self.opt_x), 1, xs)
         return self.schedule(distances) * self.base_noise
     
 
-class NoisySurrogateModel(AbstractModel):
+class NoisySurrogateModelPD1(AbstractModel):
     def __init__(self, noise_type, target_function, min_noise, **kwargs) -> None:
         super().__init__(**kwargs)
         self.noise_type = noise_type
         self.target_function = target_function
         self.min_noise = min_noise
 
-    def _train(self, X: np.ndarray, Y: np.ndarray) -> NoisySurrogateModel:
+    def _train(self, X: np.ndarray, Y: np.ndarray) -> NoisySurrogateModelPD1:
         if not isinstance(X, np.ndarray):
             raise NotImplementedError("X has to be of type np.ndarray.")
         if not isinstance(Y, np.ndarray):
@@ -158,20 +160,19 @@ class NoisySurrogateModel(AbstractModel):
         if not isinstance(X, np.ndarray):
             raise NotImplementedError("X has to be of type np.ndarray.")
 
-        # if X.shape[0] > 1:
-        #     import pdb; pdb.set_trace()
-        ground_truth = np.array(self.target_function(X))
+        confs = [{hp: conf_array[i] for i, hp in enumerate(self._configspace.keys())} for conf_array in X]
+        confs = pd.DataFrame(confs)
+        confs['epoch'] = self.target_function.end
+
+        bounds = self.target_function.Result.metric_defs['valid_error_rate'].bounds
+        ground_truth = self.target_function.surrogates['valid_error_rate'].predict(confs).clip(*bounds)
+        # ground_truth = np.array([self.target_function.query(conf).error for conf in confs])
         noise_levels = self.noise_type(X, ground_truth) + self.min_noise
         
 
         # if (noise_levels <= 0).any():
+        #     import pdb; pdb.set_trace()
         mu_noise = np.random.normal(loc=0, scale=noise_levels, size=ground_truth.shape)
         sigma_noise = np.random.normal(loc=0, scale=noise_levels, size=ground_truth.shape)
-        stds = np.abs(mu_noise) + sigma_noise
-        stds = np.maximum(stds, 1e-8)
 
-        # if X.shape[0] > 1:
-        #     print(f'INNER {X.shape}', X[(ground_truth + mu_noise).argmin()], (ground_truth + mu_noise).min())
-
-        return ground_truth + mu_noise, np.ones_like(ground_truth) * 1e-8#np.power(stds, 2)
-        # return ground_truth, np.ones_like(ground_truth) * 1e-8
+        return ground_truth + mu_noise, np.power(np.abs(mu_noise) + np.abs(sigma_noise), 2)
