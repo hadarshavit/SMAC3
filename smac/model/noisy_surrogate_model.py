@@ -166,12 +166,12 @@ class NoisySurrogateModel(AbstractModel):
 
         # if (noise_levels <= 0).any():
         mu_noise = np.random.normal(loc=0, scale=noise_levels, size=ground_truth.shape)
-        sigma_noise = np.random.normal(loc=0, scale=noise_levels, size=ground_truth.shape)
-        stds = np.abs(mu_noise) + sigma_noise
-        stds = np.maximum(stds, 1e-8)
+        # sigma_noise = np.random.normal(loc=0, scale=noise_levels, size=ground_truth.shape)
+        # stds = np.abs(mu_noise) + sigma_noise
+        # stds = np.maximum(stds, self.min_noise)
 
         # if X.shape[0] > 1:
         #     print(f'INNER {X.shape}', X[(ground_truth + mu_noise).argmin()], (ground_truth + mu_noise).min())
 
-        return ground_truth + mu_noise, np.ones_like(ground_truth) * 1e-8#np.power(stds, 2)
+        return ground_truth + mu_noise, np.ones_like(ground_truth) * self.noise_type.base_noise #np.power(stds, 2)
         # return ground_truth, np.ones_like(ground_truth) * 1e-8

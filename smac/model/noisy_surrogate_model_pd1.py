@@ -168,11 +168,11 @@ class NoisySurrogateModelPD1(AbstractModel):
         ground_truth = self.target_function.surrogates['valid_error_rate'].predict(confs).clip(*bounds)
         # ground_truth = np.array([self.target_function.query(conf).error for conf in confs])
         noise_levels = self.noise_type(X, ground_truth) + self.min_noise
-        
+        # noise_levels[noise_levels < 0] = self.min_noise
 
         # if (noise_levels <= 0).any():
         #     import pdb; pdb.set_trace()
         mu_noise = np.random.normal(loc=0, scale=noise_levels, size=ground_truth.shape)
-        sigma_noise = np.random.normal(loc=0, scale=noise_levels, size=ground_truth.shape)
+        # sigma_noise = np.random.normal(loc=0, scale=noise_levels, size=ground_truth.shape)
 
-        return ground_truth + mu_noise, np.power(np.abs(mu_noise) + np.abs(sigma_noise), 2)
+        return ground_truth + mu_noise, np.ones_like(ground_truth) * self.noise_type.base_noise
